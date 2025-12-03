@@ -2,50 +2,6 @@
 
 Journal repository for SIBiLS - merges journal data from multiple sources.
 
-## Package Structure
-
-```
-sibils_journals/
-├── __init__.py                    # Public API exports
-├── __main__.py                    # CLI entry point with subcommands
-├── config.py                      # Configuration and paths
-├── download.py                    # Download data from sources
-├── unify.py                       # Unify downloaded data
-├── models.py                      # JournalDict TypedDict + constants
-├── metrics.py                     # QualityMetrics tracking
-├── merger.py                      # Journal unification logic
-├── stats.py                       # Statistics generation
-├── sibils_fetch.py                # Fetch journal data from SIBiLS Elasticsearch
-├── sibils_filter.py               # Filter/match unified data against SIBiLS
-├── validators.py                  # ISSN-L consistency validation
-├── normalizers/
-│   ├── __init__.py               # Export all normalize_* functions
-│   ├── identifiers.py            # ISSN validation and normalization
-│   ├── text.py                   # Text normalization
-│   ├── geography.py              # Country normalization (ISO 3166-1)
-│   ├── languages.py              # Language normalization (ISO 639-1)
-│   ├── licenses.py               # License normalization (SPDX)
-│   ├── subjects.py               # Subject/discipline normalization
-│   ├── review_process.py         # Review process normalization
-│   ├── preservation.py           # Preservation service normalization
-│   ├── deposit_policy.py         # Deposit policy normalization
-│   └── utils.py                  # Shared normalizer utilities
-├── loaders/
-│   ├── __init__.py               # Export all load_* functions
-│   ├── issn.py                   # ISSN-L table loader
-│   ├── crossref.py               # Crossref data
-│   ├── openalex.py               # OpenAlex data
-│   ├── europepmc.py              # EuropePMC data
-│   ├── doaj.py                   # DOAJ data
-│   ├── nlm.py                    # NLM Catalog data
-│   └── utils.py                  # Shared loader utilities
-└── exporters/
-    ├── __init__.py               # Export all export functions
-    ├── csv.py                    # CSV export
-    ├── summary.py                # Summary/statistics export
-    └── elasticsearch.py          # Elasticsearch export
-```
-
 ## Python API
 
 ### Import normalized functions
@@ -108,6 +64,50 @@ journals.extend(load_crossref_data(input_dir))
 df = unify_journals(journals, issn_l_map)
 ```
 
+## Package Structure
+
+```
+sibils_journals/
+├── __init__.py                    # Public API exports
+├── __main__.py                    # CLI entry point with subcommands
+├── config.py                      # Configuration and paths
+├── download.py                    # Download data from sources
+├── unify.py                       # Unify downloaded data
+├── models.py                      # JournalDict TypedDict + constants
+├── metrics.py                     # QualityMetrics tracking
+├── merger.py                      # Journal unification logic
+├── stats.py                       # Statistics generation
+├── sibils_fetch.py                # Fetch journal data from SIBiLS Elasticsearch
+├── sibils_filter.py               # Filter/match unified data against SIBiLS
+├── validators.py                  # ISSN-L consistency validation
+├── normalizers/
+│   ├── __init__.py               # Export all normalize_* functions
+│   ├── identifiers.py            # ISSN validation and normalization
+│   ├── text.py                   # Text normalization
+│   ├── geography.py              # Country normalization (ISO 3166-1)
+│   ├── languages.py              # Language normalization (ISO 639-1)
+│   ├── licenses.py               # License normalization (SPDX)
+│   ├── subjects.py               # Subject/discipline normalization
+│   ├── review_process.py         # Review process normalization
+│   ├── preservation.py           # Preservation service normalization
+│   ├── deposit_policy.py         # Deposit policy normalization
+│   └── utils.py                  # Shared normalizer utilities
+├── loaders/
+│   ├── __init__.py               # Export all load_* functions
+│   ├── issn.py                   # ISSN-L table loader
+│   ├── crossref.py               # Crossref data
+│   ├── openalex.py               # OpenAlex data
+│   ├── europepmc.py              # EuropePMC data
+│   ├── doaj.py                   # DOAJ data
+│   ├── nlm.py                    # NLM Catalog data
+│   └── utils.py                  # Shared loader utilities
+└── exporters/
+    ├── __init__.py               # Export all export functions
+    ├── csv.py                    # CSV export
+    ├── summary.py                # Summary/statistics export
+    └── elasticsearch.py          # Elasticsearch export
+```
+
 ## Data Pipeline
 
 ```mermaid
@@ -160,7 +160,7 @@ flowchart TD
         P1 --> P2 --> P3 --> P4
     end
 
-    subgraph sibils["4. SIBiLS FILTER, optional (sibils_filter.py)"]
+    subgraph sibils["4. SIBiLS FILTER, optional<br>(sibils_filter.py)"]
         direction TB
         SD[("SIBiLS Data<br/>75K journal tuples")]
 
@@ -187,11 +187,12 @@ flowchart TD
         processing --> UNM
     end
 
-    subgraph output["5. OUTPUT"]
-        CSV[/"unified_issn.csv"/]
-        JSON[/"summary.json"/]
+    subgraph output["5. OUTPUT (exporters module)"]
+        direction LR
+        EXP_CSV["csv.py"] --> CSV[/"unified_issn.csv"/]
+        EXP_SUM["summary.py"] --> JSON[/"summary.json"/]
+        EXP_ES["elasticsearch.py"] --> ES[("Elasticsearch<br/>(optional)")]
         CONF[/"issn_conflicts.csv"/]
-        ES[("Elasticsearch<br/>(optional)")]
     end
 
     %% Main flow
@@ -202,13 +203,12 @@ flowchart TD
     sources --> loaders
     loaders --> merge
     loaders -.-> VAL
-    ISSNL --> merge
     ISSNL -.-> VAL
     VAL -.-> CONF
     priority -.-> merge
-    merge --> |"~180K unified records"| sibils
+    merge --> |"--sibils-filter"| sibils
     merge --> |"without --sibils-filter"| output
-    sibils --> |"--sibils-filter<br/>~70K SIBiLS records"| output
+    sibils --> output
 
     %% Styling
     classDef source fill:#e1f5fe,stroke:#01579b
@@ -218,7 +218,7 @@ flowchart TD
     classDef db fill:#fce4ec,stroke:#c2185b
 
     class CR,OA,DOAJ,PMC,NLM source
-    class DL,SF,L1,L2,L3,L4,VAL,P1,P2,P3,P4,M1,M2,M3,M4,F1,F2,F3,F4 process
+    class DL,SF,L1,L2,L3,L4,VAL,P1,P2,P3,P4,M1,M2,M3,M4,F1,F2,F3,F4,EXP_CSV,EXP_SUM,EXP_ES process
     class ISSNL,SD db
     class CONF,CSV,JSON,REM,UNM file
     class ES,EXT_CR,EXT_OA,EXT_DOAJ,EXT_PMC,EXT_NLM,EXT_ISSN,EXT_ES db

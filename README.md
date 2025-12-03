@@ -128,3 +128,7 @@ uv run python -m sibils_journals unify --sibils-filter
 | ISSN-L table | ISSN.org Terms | https://www.issn.org/services/online-services/access-to-issn-l-table/ |
 
 **Note:** The unified output dataset is subject to the most restrictive license among the sources used. When including DOAJ data, the output is governed by **CC BY-SA 4.0**, requiring attribution and share-alike for derivative works.
+
+## Developer Documentation
+
+For Python API, package structure, and data pipeline diagram, see [src/sibils_journals/README.md](src/sibils_journals/README.md).
