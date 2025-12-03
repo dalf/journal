@@ -146,7 +146,7 @@ Examples:
     logger.info(f"Total records loaded: {len(all_journals):,}")
 
     if not all_journals:
-        logger.error("No data found! Run 'python -m issn_unifier download' first.")
+        logger.error("No data found! Run 'python -m sibils_journals download' first.")
         return 1
 
     # Validate ISSN-L consistency (detect records with conflicting ISSNs)

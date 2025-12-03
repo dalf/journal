@@ -1,4 +1,4 @@
-"""Data models and constants for ISSN unifier."""
+"""Data models and constants for SIBiLS journals."""
 
 import re
 from enum import Enum

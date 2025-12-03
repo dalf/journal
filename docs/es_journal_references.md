@@ -369,7 +369,7 @@ if referenced_issns_file:
 **3. CLI usage:**
 
 ```bash
-python -m issn_unifier.cli --filter-issns referenced_issns.txt --es-url http://localhost:9200
+python -m sibils_journals.cli --filter-issns referenced_issns.txt --es-url http://localhost:9200
 ```
 
 **Pros:**

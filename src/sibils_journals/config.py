@@ -1,4 +1,4 @@
-"""Configuration constants for ISSN unifier."""
+"""Configuration constants for SIBiLS journals."""
 
 from pathlib import Path
 

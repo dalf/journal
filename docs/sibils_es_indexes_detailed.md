@@ -278,7 +278,7 @@ The `fetch-sibils` command extracts unique (journal, medline_ta) pairs from MEDL
 ### Command
 
 ```bash
-issn-unifier fetch-sibils [options]
+sibils-journals fetch-sibils [options]
 ```
 
 ### Options
@@ -427,9 +427,9 @@ GET sibils_pmc25_r1_v5.0.5.8/_search
 
 | File | Description |
 |------|-------------|
-| `issn_unifier/fetch_sibils.py` | SIBiLS extraction implementation |
-| `issn_unifier/sibils.py` | Journal filtering and matching |
-| `issn_unifier/config.py` | ES URL and version configuration |
+| `sibils_journals/fetch_sibils.py` | SIBiLS extraction implementation |
+| `sibils_journals/sibils.py` | Journal filtering and matching |
+| `sibils_journals/config.py` | ES URL and version configuration |
 | `data/sibils/journal_fields_v*.csv` | Extracted journal data |
 
 ## Index Naming Convention

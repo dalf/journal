@@ -1,4 +1,4 @@
-"""Data quality validators for ISSN unification."""
+"""Data quality validators for SIBiLS journals."""
 
 import csv
 import logging

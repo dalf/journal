@@ -1,7 +1,7 @@
 """
 Data loaders for various ISSN sources.
 
-Each loader imports normalizers from issn_unifier.normalizers and uses
+Each loader imports normalizers from sibils_journals.normalizers and uses
 the deduplicate_journals() helper to remove within-source duplicates.
 
 The loading pipeline has three testable layers:

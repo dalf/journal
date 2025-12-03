@@ -52,7 +52,7 @@ Example: `sibils_med25_r1_v5.0.5.8`
 Extract journal fields for matching:
 
 ```bash
-issn-unifier fetch-sibils --version 5.0.5.8 --source both
+sibils-journals fetch-sibils --version 5.0.5.8 --source both
 ```
 
 Output: `data/sibils/journal_fields_v5.0.5.8.csv`
@@ -60,5 +60,5 @@ Output: `data/sibils/journal_fields_v5.0.5.8.csv`
 ## See Also
 
 - [Detailed documentation](sibils_es_indexes_detailed.md) - Complete field mappings, statistics, and query examples
-- `issn_unifier/fetch_sibils.py` - Extraction implementation
-- `issn_unifier/sibils.py` - Journal matching logic
+- `sibils_journals/fetch_sibils.py` - Extraction implementation
+- `sibils_journals/sibils.py` - Journal matching logic

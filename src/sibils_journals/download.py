@@ -10,8 +10,8 @@ Downloads journal/ISSN data from multiple sources:
 6. NLM Catalog (Entrez journal list with abbreviations)
 
 Usage:
-    python -m issn_unifier download [--output-dir ./data/raw] [--sources all]
-    python -m issn_unifier download --yes  # Non-interactive mode
+    python -m sibils_journals download [--output-dir ./data/raw] [--sources all]
+    python -m sibils_journals download --yes  # Non-interactive mode
 """
 
 import argparse
@@ -647,7 +647,7 @@ Examples:
     logger.info("Download Complete!")
     logger.info("=" * 60)
     logger.info(f"Data saved to: {args.output_dir}")
-    logger.info("Next step: Run 'python -m issn_unifier unify' to merge the data")
+    logger.info("Next step: Run 'python -m sibils_journals unify' to merge the data")
 
     return 0
 

@@ -244,12 +244,12 @@ def get_sibils_path(version: str | None = None) -> Path:
     if version:
         sibils_path = DEFAULT_SIBILS_DIR / f"journal_fields_v{version}.csv"
         if not sibils_path.exists():
-            raise FileNotFoundError(f"SIBiLS file not found: {sibils_path}. Run 'issn-unifier fetch-sibils' first.")
+            raise FileNotFoundError(f"SIBiLS file not found: {sibils_path}. Run 'sibils-journals fetch-sibils' first.")
         return sibils_path
 
     sibils_files = sorted(DEFAULT_SIBILS_DIR.glob("journal_fields_v*.csv"), key=_parse_sibils_version)
     if not sibils_files:
-        raise FileNotFoundError(f"No SIBiLS journal_fields CSV found in {DEFAULT_SIBILS_DIR}. Run 'issn-unifier fetch-sibils' first.")
+        raise FileNotFoundError(f"No SIBiLS journal_fields CSV found in {DEFAULT_SIBILS_DIR}. Run 'sibils-journals fetch-sibils' first.")
     return sibils_files[-1]  # Most recent version
 
 

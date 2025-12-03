@@ -1,10 +1,10 @@
 """Command-line interface for ISSN data tools.
 
 Usage:
-    python -m issn_unifier download      # Download data from sources
-    python -m issn_unifier unify         # Unify downloaded data
-    python -m issn_unifier fetch-sibils  # Extract journal fields from SIBiLS
-    python -m issn_unifier --help        # Show help
+    python -m sibils_journals download      # Download data from sources
+    python -m sibils_journals unify         # Unify downloaded data
+    python -m sibils_journals fetch-sibils  # Extract journal fields from SIBiLS
+    python -m sibils_journals --help        # Show help
 """
 
 import sys
@@ -18,12 +18,12 @@ def main() -> int:
         print("  unify         Unify downloaded data into a single dataset")
         print("  fetch-sibils  Extract journal fields from SIBiLS Elasticsearch")
         print()
-        print("Run 'python -m issn_unifier <command> --help' for command-specific help.")
+        print("Run 'python -m sibils_journals <command> --help' for command-specific help.")
         return 0
 
     command = sys.argv[1]
     # Remove the command from argv so subcommand parsers work correctly
-    sys.argv = [f"issn_unifier {command}"] + sys.argv[2:]
+    sys.argv = [f"sibils_journals {command}"] + sys.argv[2:]
 
     if command == "download":
         from .download import main as download_main
@@ -39,7 +39,7 @@ def main() -> int:
         return fetch_sibils_main()
     else:
         print(f"Unknown command: {command}")
-        print("Run 'python -m issn_unifier --help' for available commands.")
+        print("Run 'python -m sibils_journals --help' for available commands.")
         return 1
 
 
