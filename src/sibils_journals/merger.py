@@ -63,6 +63,8 @@ class KeyResolver:
     Handles:
     - ISSN-L linking (multiple ISSNs → same ISSN-L)
     - ISSN collisions (same ISSN in different records → same key)
+    - NLM ID conflicts: when same ISSN has different NLM IDs, creates separate
+      records using NLM-{id} as the key (preserves journal identity)
     - Conflict detection and logging
 
     Usage:
@@ -86,13 +88,22 @@ class KeyResolver:
         self._conflicts: list[dict] = []
         # Track NLM ID per canonical key (for ISSN reuse detection)
         self._key_to_nlm_id: dict[str, str] = {}
+        # Maps NLM ID to its unique key (for journals with ISSN conflicts)
+        self._nlm_id_to_key: dict[str, str] = {}
         # Track ISSN reuse conflicts where different NLM IDs prevented merge
         self._issn_reuse_conflicts: list[dict] = []
 
     def register(self, journal: JournalDict) -> None:
         """Register a journal's ISSNs, building the canonical key mapping."""
         issns = self._get_all_issns(journal)
+        nlm_id = journal.get("nlm_id")
+
+        # If journal has no ISSNs but has NLM ID, use NLM-based key
         if not issns:
+            if nlm_id:
+                nlm_key = make_nlm_identifier(nlm_id)
+                self._nlm_id_to_key[nlm_id] = nlm_key
+                self._key_to_nlm_id[nlm_key] = nlm_id
             return
 
         # Determine the canonical key for this journal
@@ -113,21 +124,21 @@ class KeyResolver:
         # BUT check for NLM ID conflict first - different NLM IDs mean different journals
         if existing_key:
             existing_nlm = self._key_to_nlm_id.get(existing_key)
-            new_nlm = journal.get("nlm_id")
 
             # If both have different NLM IDs, don't merge - keep them separate
-            if existing_nlm and new_nlm and existing_nlm != new_nlm:
+            if existing_nlm and nlm_id and existing_nlm != nlm_id:
                 self._issn_reuse_conflicts.append(
                     {
                         "issn": conflicting_issn,
                         "existing_key": existing_key,
                         "existing_nlm_id": existing_nlm,
-                        "new_nlm_id": new_nlm,
+                        "new_nlm_id": nlm_id,
                         "new_title": journal.get("title"),
                     }
                 )
-                # Don't use existing_key - create separate record with canonical_key
-                final_key = canonical_key
+                # Use NLM ID as the key for this separate journal record
+                final_key = make_nlm_identifier(nlm_id)
+                self._nlm_id_to_key[nlm_id] = final_key
             else:
                 final_key = existing_key
                 if existing_key != canonical_key:
@@ -142,10 +153,13 @@ class KeyResolver:
         else:
             final_key = canonical_key
 
-        # Track NLM ID for this key (first one wins)
-        nlm_id = journal.get("nlm_id")
-        if nlm_id and final_key not in self._key_to_nlm_id:
-            self._key_to_nlm_id[final_key] = nlm_id
+        # Track NLM ID for this key
+        if nlm_id:
+            if final_key not in self._key_to_nlm_id:
+                self._key_to_nlm_id[final_key] = nlm_id
+            # Also track NLM ID → key mapping for lookup
+            if nlm_id not in self._nlm_id_to_key:
+                self._nlm_id_to_key[nlm_id] = final_key
 
         # Register ISSNs to this key, but don't overwrite mappings to keys with different NLM IDs
         for issn in issns:
@@ -157,25 +171,38 @@ class KeyResolver:
                     final_nlm = self._key_to_nlm_id.get(final_key) or nlm_id
                     if existing_issn_nlm and final_nlm and existing_issn_nlm != final_nlm:
                         # Don't overwrite - this ISSN belongs to a different journal
-                        self._issn_reuse_conflicts.append(
-                            {
-                                "issn": issn,
-                                "existing_key": existing_issn_key,
-                                "existing_nlm_id": existing_issn_nlm,
-                                "new_nlm_id": final_nlm,
-                                "new_title": journal.get("title"),
-                            }
-                        )
+                        # But DO register this ISSN to the NLM-based key for the new journal
+                        if nlm_id:
+                            nlm_key = self._nlm_id_to_key.get(nlm_id)
+                            if nlm_key:
+                                # Track this ISSN as belonging to this NLM-based key too
+                                self._key_to_issns.setdefault(nlm_key, set()).add(issn)
                         continue
             self._issn_to_key[issn] = final_key
         self._key_to_issns.setdefault(final_key, set()).update(issn for issn in issns if self._issn_to_key.get(issn) == final_key)
 
     def get_canonical_key(self, journal: JournalDict) -> str | None:
-        """Get the canonical key for a journal (must call register() first)."""
+        """Get the canonical key for a journal (must call register() first).
+
+        For journals with NLM ID conflicts (same ISSN, different NLM IDs),
+        returns the NLM-based key to keep them separate.
+        """
+        nlm_id = journal.get("nlm_id")
+
+        # If this NLM ID has a dedicated key (due to ISSN conflict), use it
+        if nlm_id and nlm_id in self._nlm_id_to_key:
+            nlm_key = self._nlm_id_to_key[nlm_id]
+            # Verify this is indeed a separate key (not just an NLM-based key for a normal record)
+            # A separate key would be in format NLM-{id}
+            if nlm_key.startswith("NLM-"):
+                return nlm_key
+
+        # Standard lookup by ISSN
         issns = self._get_all_issns(journal)
         for issn in issns:
             if issn in self._issn_to_key:
                 return self._issn_to_key[issn]
+
         # Fallback: compute key directly
         return self._determine_canonical_key(journal)
 
@@ -236,6 +263,13 @@ def create_unified_record(journal: JournalDict, source: DataSource) -> JournalDi
     Returns:
         New JournalDict with sources initialized
     """
+    # Build initial all_issns list from available ISSNs
+    all_issns = []
+    for issn_field in ["issn_l", "issn_print", "issn_electronic"]:
+        issn = journal.get(issn_field)
+        if issn and issn not in all_issns:
+            all_issns.append(issn)
+
     return JournalDict(
         # Core identifiers
         issn_l=journal.get("issn_l"),
@@ -247,6 +281,11 @@ def create_unified_record(journal: JournalDict, source: DataSource) -> JournalDi
         publisher=journal.get("publisher"),
         country=journal.get("country"),
         sources=[source],
+        # ISSN lookup
+        all_issns=all_issns,
+        # Journal relationships
+        predecessor_nlm_ids=list(journal.get("predecessor_nlm_ids") or []),
+        successor_nlm_ids=list(journal.get("successor_nlm_ids") or []),
         # Basic metadata
         medline_abbreviation=journal.get("medline_abbreviation"),
         is_medline_indexed=journal.get("is_medline_indexed"),
@@ -372,6 +411,8 @@ def merge_journal_records(
         "preservation_services",
         "deposit_policy",
         "language",
+        "predecessor_nlm_ids",
+        "successor_nlm_ids",
     ]:
         new_values = new_journal.get(field) or []
         if new_values:
@@ -398,6 +439,14 @@ def merge_journal_records(
         existing["nlm_id"] = nlm_id
     if openalex_id and not existing.get("openalex_id"):
         existing["openalex_id"] = openalex_id
+
+    # Collect all ISSNs into all_issns for comprehensive lookup
+    all_issns_list = existing.get("all_issns", [])
+    for issn_field in ["issn_l", "issn_print", "issn_electronic"]:
+        issn = new_journal.get(issn_field)
+        if issn and issn not in all_issns_list:
+            all_issns_list.append(issn)
+    existing["all_issns"] = all_issns_list
 
 
 def normalize_title_key(title: str | None) -> str | None:

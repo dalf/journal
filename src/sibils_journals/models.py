@@ -59,6 +59,7 @@ class DataSource(str, Enum):
     DOAJ = "doaj"
     EUROPEPMC = "europepmc"
     NLM = "nlm"
+    LSIOU = "lsiou"  # NLM List of Serials Indexed for Online Users (MEDLINE journals)
     SIBILS = "sibils"  # SIBiLS journal references (title-only, no ISSN)
 
 
@@ -67,6 +68,7 @@ class DataSource(str, Enum):
 DEFAULT_SOURCE_PRIORITY = {
     DataSource.DOAJ: 6,  # Curated OA data (strict quality criteria)
     DataSource.NLM: 6,  # Curated biomedical data (librarian-maintained)
+    DataSource.LSIOU: 7,  # NLM MEDLINE serials (most authoritative for biomedical journals)
     DataSource.OPENALEX: 5,  # Broad coverage, metrics, subjects
     DataSource.CROSSREF: 4,  # Publisher-reported data, fill gaps
     DataSource.EUROPEPMC: 1,  # Sparse data (mainly is_pmc_indexed flag)
@@ -218,6 +220,13 @@ class JournalDict(TypedDict, total=False):
 
     # Provenance (added during merge)
     sources: list[DataSource]
+
+    # ISSN lookup (all ISSNs for comprehensive search)
+    all_issns: list[str]  # All ISSNs: issn_l + issn_print + issn_electronic + historical
+
+    # Journal relationships (from LSIOU TitleRelated)
+    predecessor_nlm_ids: list[str]  # NLM IDs of predecessor journals (title changes, etc.)
+    successor_nlm_ids: list[str]  # NLM IDs of successor journals
 
 
 # List fields derived from JournalDict type hints (joined with "|" for CSV export)
