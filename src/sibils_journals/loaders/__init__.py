@@ -15,6 +15,7 @@ from .crossref import load_crossref_data, normalize_crossref_dataframe, process_
 from .doaj import load_doaj_data, normalize_doaj_dataframe, process_doaj_record
 from .europepmc import load_europepmc_data, parse_europepmc_issn, process_europepmc_record
 from .issn import load_issn_l_table
+from .lsiou import load_lsiou_data, parse_lsiou_record
 from .nlm import load_nlm_data, parse_nlm_record
 from .openalex import load_openalex_data, process_openalex_record
 from .utils import deduplicate_journals
@@ -29,6 +30,7 @@ __all__ = [
     "load_europepmc_data",
     "load_doaj_data",
     "load_nlm_data",
+    "load_lsiou_data",
     # DataFrame normalizers (testable with synthetic DataFrames)
     "normalize_crossref_dataframe",
     "normalize_doaj_dataframe",
@@ -39,4 +41,5 @@ __all__ = [
     "process_openalex_record",
     "parse_europepmc_issn",
     "parse_nlm_record",
+    "parse_lsiou_record",
 ]

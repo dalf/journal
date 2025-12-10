@@ -30,6 +30,8 @@ from .config import (
     DEFAULT_RAW_DIR,
     DOAJ_CSV_URL,
     EUROPEPMC_BULK_URL,
+    LSIOU_FILENAME,
+    LSIOU_FTP_URL,
     NLM_CATALOG_URL,
     NLM_EUTILS_BASE,
     OPENALEX_S3_BUCKET,
@@ -74,6 +76,7 @@ def setup_output_dir(output_dir: Path) -> dict[str, Path]:
         "europepmc": output_dir / "europepmc",
         "doaj": output_dir / "doaj",
         "nlm": output_dir / "nlm",
+        "lsiou": output_dir / "lsiou",
     }
     for d in dirs.values():
         d.mkdir(parents=True, exist_ok=True)
@@ -555,6 +558,107 @@ def download_nlm_indexed(dirs: dict[str, Path], force_yes: bool = False) -> None
         logger.debug(traceback.format_exc())
 
 
+def download_lsiou(dirs: dict[str, Path], force_yes: bool = False) -> None:
+    """
+    Download LSIOU (List of Serials Indexed for Online Users) XML from NLM FTP.
+
+    LSIOU contains all journals ever indexed for MEDLINE, including currently
+    indexed, historical, and ceased titles. This is the most authoritative
+    source for MEDLINE journal metadata.
+
+    Key features:
+    - 15,473 titles (2024 edition)
+    - Native ISSN-L (ISSNLinking) field
+    - Includes ~5,294 currently indexed + ~10,000 historical titles
+    - Structured XML format
+
+    See: https://www.nlm.nih.gov/tsd/serials/lsiou.html
+    """
+    import ftplib
+    import tempfile
+
+    logger.info("=" * 60)
+    logger.info("LSIOU (List of Serials Indexed for Online Users)")
+    logger.info("=" * 60)
+
+    output_path = dirs["lsiou"] / LSIOU_FILENAME
+
+    if output_path.exists():
+        file_size = output_path.stat().st_size / (1024 * 1024)  # MB
+        logger.info(f"  Found existing file: {output_path} ({file_size:.1f} MB)")
+        if not prompt_user("  Re-download?", default=False, force_yes=force_yes):
+            return
+
+    logger.info(f"  Downloading from: {LSIOU_FTP_URL}")
+    logger.info("  Note: Using FTP protocol for NLM server...")
+
+    try:
+        # Parse FTP URL
+        # ftp://ftp.nlm.nih.gov/online/journals/lsi2025.xml
+        ftp_host = "ftp.nlm.nih.gov"
+        ftp_path = "/online/journals/"
+
+        # Connect to FTP server
+        logger.info(f"  Connecting to {ftp_host}...")
+        ftp = ftplib.FTP(ftp_host, timeout=60)
+        ftp.login()  # Anonymous login
+
+        # Switch to binary mode (required for SIZE command)
+        ftp.voidcmd("TYPE I")
+
+        # Navigate to directory
+        ftp.cwd(ftp_path)
+
+        # Get file size for progress bar
+        file_size = ftp.size(LSIOU_FILENAME)
+        logger.info(f"  File size: {file_size / (1024 * 1024):.1f} MB")
+
+        # Download to temp file first, then move
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+            tmp_path = Path(tmp_file.name)
+
+            bytes_downloaded = [0]  # Use list to allow modification in callback
+
+            def write_callback(data):
+                tmp_file.write(data)
+                bytes_downloaded[0] += len(data)
+
+            with tqdm(
+                total=file_size,
+                unit="B",
+                unit_scale=True,
+                desc="LSIOU XML",
+            ) as pbar:
+
+                def progress_callback(data):
+                    write_callback(data)
+                    pbar.update(len(data))
+
+                ftp.retrbinary(f"RETR {LSIOU_FILENAME}", progress_callback, blocksize=8192)
+
+        ftp.quit()
+
+        # Move temp file to final location
+        import shutil
+
+        shutil.move(tmp_path, output_path)
+
+        actual_size = output_path.stat().st_size / (1024 * 1024)
+        logger.info(f"  Downloaded {actual_size:.1f} MB to: {output_path}")
+
+    except ftplib.all_errors as e:
+        logger.error(f"  FTP error: {e}")
+        if output_path.exists():
+            output_path.unlink()
+    except Exception as e:
+        logger.error(f"  Error downloading LSIOU: {e}")
+        import traceback
+
+        logger.debug(traceback.format_exc())
+        if output_path.exists():
+            output_path.unlink()
+
+
 def main():
     logging.basicConfig(
         level=logging.INFO,
@@ -582,7 +686,7 @@ Examples:
         "--sources",
         type=str,
         default="all",
-        help="Sources to download: all, issn, crossref, openalex, europepmc, doaj, nlm (comma-separated)",
+        help="Sources to download: all, issn, crossref, openalex, europepmc, doaj, nlm, lsiou (comma-separated)",
     )
     parser.add_argument(
         "-y",
@@ -604,7 +708,7 @@ Examples:
         logging.getLogger().setLevel(logging.DEBUG)
 
     # Parse sources
-    valid_sources = {"issn", "crossref", "openalex", "europepmc", "doaj", "nlm"}
+    valid_sources = {"issn", "crossref", "openalex", "europepmc", "doaj", "nlm", "lsiou"}
     if args.sources.lower() == "all":
         sources = valid_sources.copy()
     else:
@@ -642,6 +746,9 @@ Examples:
     if "nlm" in sources:
         download_nlm(dirs, force_yes=args.yes)
         download_nlm_indexed(dirs, force_yes=args.yes)
+
+    if "lsiou" in sources:
+        download_lsiou(dirs, force_yes=args.yes)
 
     logger.info("=" * 60)
     logger.info("Download Complete!")

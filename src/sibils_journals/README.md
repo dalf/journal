@@ -100,6 +100,7 @@ sibils_journals/
 │   ├── europepmc.py              # EuropePMC data
 │   ├── doaj.py                   # DOAJ data
 │   ├── nlm.py                    # NLM Catalog data
+│   ├── lsiou.py                  # LSIOU (MEDLINE serials with relationships)
 │   └── utils.py                  # Shared loader utilities
 └── exporters/
     ├── __init__.py               # Export all export functions
@@ -114,7 +115,7 @@ sibils_journals/
 flowchart TD
     subgraph ext_data["External Data Sources"]
         direction LR
-        EXT_CR[("Crossref API")] ~~~ EXT_OA[("OpenAlex S3")] ~~~ EXT_DOAJ[("DOAJ")] ~~~ EXT_PMC[("EuropePMC FTP")] ~~~ EXT_NLM[("NLM/NCBI")] ~~~ EXT_ISSN[("ISSN.org")]
+        EXT_CR[("Crossref API")] ~~~ EXT_OA[("OpenAlex S3")] ~~~ EXT_DOAJ[("DOAJ")] ~~~ EXT_PMC[("EuropePMC FTP")] ~~~ EXT_NLM[("NLM/NCBI")] ~~~ EXT_LSIOU[("LSIOU FTP")] ~~~ EXT_ISSN[("ISSN.org")]
     end
 
     subgraph ext_sibils["SIBiLS Production"]
@@ -132,6 +133,7 @@ flowchart TD
         DOAJ[("DOAJ<br/>~20K OA journals")]
         PMC[("EuropePMC<br/>~50K PMC flag")]
         NLM[("NLM<br/>~35K MEDLINE")]
+        LSIOU[("LSIOU<br/>~15K MEDLINE serials")]
         ISSNL[("ISSN-L Table<br/>~2.5M mappings<br/>ISSN → ISSN-L")]
     end
 
@@ -147,7 +149,7 @@ flowchart TD
     end
 
     subgraph priority["Source Priority (models.py)"]
-        PR["DOAJ &amp; NLM (6)<br>OpenAlex (5)<br/>Crossref (4)<br>EuropePMC (1)"]
+        PR["LSIOU (7)<br/>DOAJ &amp; NLM (6)<br>OpenAlex (5)<br/>Crossref (4)<br>EuropePMC (1)"]
     end
 
     subgraph merge["3. MERGE (merger.py)"]
@@ -217,9 +219,9 @@ flowchart TD
     classDef file fill:#e8f5e9,stroke:#2e7d32
     classDef db fill:#fce4ec,stroke:#c2185b
 
-    class CR,OA,DOAJ,PMC,NLM source
+    class CR,OA,DOAJ,PMC,NLM,LSIOU source
     class DL,SF,L1,L2,L3,L4,VAL,P1,P2,P3,P4,M1,M2,M3,M4,F1,F2,F3,F4,EXP_CSV,EXP_SUM,EXP_ES process
     class ISSNL,SD db
     class CONF,CSV,JSON,REM,UNM file
-    class ES,EXT_CR,EXT_OA,EXT_DOAJ,EXT_PMC,EXT_NLM,EXT_ISSN,EXT_ES db
+    class ES,EXT_CR,EXT_OA,EXT_DOAJ,EXT_PMC,EXT_NLM,EXT_LSIOU,EXT_ISSN,EXT_ES db
 ```

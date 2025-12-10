@@ -1,6 +1,6 @@
 # SIBiLS Journals
 
-Journal repository for SIBiLS. Unifies journal metadata from multiple sources (OpenAlex, Crossref, DOAJ, EuropePMC, NLM Catalog) into a single normalized dataset using ISSN-L as the primary key, with fallback to NLM ID or OpenAlex ID for journals without ISSN. Includes MEDLINE indexing status and PMC availability flags. Exports to CSV and optionally to Elasticsearch.
+Journal repository for SIBiLS. Unifies journal metadata from multiple sources (OpenAlex, Crossref, DOAJ, EuropePMC, NLM Catalog, LSIOU) into a single normalized dataset using ISSN-L as the primary key, with fallback to NLM ID or OpenAlex ID for journals without ISSN. Includes MEDLINE indexing status, PMC availability flags, and journal predecessor/successor relationships. Exports to CSV and optionally to Elasticsearch.
 
 ## Install
 
@@ -96,7 +96,7 @@ Examples:
 
 ```bash
 # Download specific sources
-uv run python -m sibils_journals download --sources crossref,doaj
+uv run python -m sibils_journals download --sources crossref,doaj,lsiou
 
 # Download all sources non-interactively
 uv run python -m sibils_journals download --yes
@@ -124,6 +124,7 @@ uv run python -m sibils_journals unify --sibils-filter
 | OpenAlex | CC0 (Public Domain) | https://docs.openalex.org/additional-help/faq#licensing |
 | EuropePMC | Open | https://europepmc.org/downloads |
 | NLM Catalog | Public Domain (US Gov) | https://www.nlm.nih.gov/databases/download/pubmed_medline.html |
+| LSIOU | Public Domain (US Gov) | https://www.nlm.nih.gov/tsd/serials/lsiou.html |
 | NCBI E-utilities | Free w/ guidelines | https://www.ncbi.nlm.nih.gov/books/NBK25497/ |
 | ISSN-L table | ISSN.org Terms | https://www.issn.org/services/online-services/access-to-issn-l-table/ |
 
