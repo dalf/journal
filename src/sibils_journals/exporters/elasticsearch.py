@@ -107,7 +107,11 @@ INDEX_MAPPING = {
             "nlm_id": {"type": "keyword"},  # NLM Catalog unique identifier
             "openalex_id": {"type": "keyword"},  # OpenAlex source identifier (e.g., S4306530189)
             "is_medline_indexed": {"type": "boolean"},  # Currently indexed in MEDLINE
-            "is_pmc_indexed": {"type": "boolean"},  # Has full-text articles in PMC
+            "is_pmc_indexed": {"type": "boolean"},  # Has formal deposit agreement with PMC
+            # PMC agreement details
+            "pmc_agreement_status": {"type": "keyword"},  # "Active", "No longer participating", etc.
+            "pmc_last_deposit_year": {"type": "integer"},  # Most recent deposit year
+            "pmc_embargo_months": {"type": "integer"},  # Embargo period in months (0 = immediate)
             # Unified ISSN completion field for autocomplete
             "issn_suggest": {
                 "type": "completion",

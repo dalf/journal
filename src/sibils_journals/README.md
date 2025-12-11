@@ -97,7 +97,7 @@ sibils_journals/
 │   ├── issn.py                   # ISSN-L table loader
 │   ├── crossref.py               # Crossref data
 │   ├── openalex.py               # OpenAlex data
-│   ├── europepmc.py              # EuropePMC data
+│   ├── pmc.py                    # PMC journal list (deposit agreements)
 │   ├── doaj.py                   # DOAJ data
 │   ├── nlm.py                    # NLM Catalog data
 │   ├── lsiou.py                  # LSIOU (MEDLINE serials with relationships)
@@ -115,7 +115,7 @@ sibils_journals/
 flowchart TD
     subgraph ext_data["External Data Sources"]
         direction LR
-        EXT_CR[("Crossref API")] ~~~ EXT_OA[("OpenAlex S3")] ~~~ EXT_DOAJ[("DOAJ")] ~~~ EXT_PMC[("EuropePMC FTP")] ~~~ EXT_NLM[("NLM/NCBI")] ~~~ EXT_LSIOU[("LSIOU FTP")] ~~~ EXT_ISSN[("ISSN.org")]
+        EXT_CR[("Crossref API")] ~~~ EXT_OA[("OpenAlex S3")] ~~~ EXT_DOAJ[("DOAJ")] ~~~ EXT_PMC[("PMC jlist")] ~~~ EXT_NLM[("NLM/NCBI")] ~~~ EXT_LSIOU[("LSIOU FTP")] ~~~ EXT_ISSN[("ISSN.org")]
     end
 
     subgraph ext_sibils["SIBiLS Production"]
@@ -131,7 +131,7 @@ flowchart TD
         CR[("Crossref<br/>~130K titles")]
         OA[("OpenAlex<br/>~250K sources")]
         DOAJ[("DOAJ<br/>~20K OA journals")]
-        PMC[("EuropePMC<br/>~50K PMC flag")]
+        PMC[("PMC jlist<br/>~4K agreements")]
         NLM[("NLM<br/>~35K MEDLINE")]
         LSIOU[("LSIOU<br/>~15K MEDLINE serials")]
         ISSNL[("ISSN-L Table<br/>~2.5M mappings<br/>ISSN → ISSN-L")]
@@ -149,7 +149,7 @@ flowchart TD
     end
 
     subgraph priority["Source Priority (models.py)"]
-        PR["LSIOU (7)<br/>DOAJ &amp; NLM (6)<br>OpenAlex (5)<br/>Crossref (4)<br>EuropePMC (1)"]
+        PR["LSIOU (7)<br/>DOAJ &amp; NLM (6)<br>OpenAlex (5)<br/>Crossref (4)<br>PMC (3)"]
     end
 
     subgraph merge["3. MERGE (merger.py)"]

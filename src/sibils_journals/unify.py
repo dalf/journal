@@ -6,7 +6,7 @@ from pathlib import Path
 
 from . import config
 from .exporters import export_csv, export_elasticsearch, export_summary_json
-from .loaders import load_crossref_data, load_doaj_data, load_europepmc_data, load_issn_l_table, load_lsiou_data, load_nlm_data, load_openalex_data
+from .loaders import load_crossref_data, load_doaj_data, load_issn_l_table, load_lsiou_data, load_nlm_data, load_openalex_data, load_pmc_data
 from .merger import unify_journals
 from .metrics import get_metrics, reset_metrics
 from .config import DEFAULT_OUTPUT_DIR, DEFAULT_RAW_DIR
@@ -139,7 +139,7 @@ Examples:
     # Load each source
     all_journals.extend(load_crossref_data(args.input_dir))
     all_journals.extend(load_openalex_data(args.input_dir))
-    all_journals.extend(load_europepmc_data(args.input_dir))
+    all_journals.extend(load_pmc_data(args.input_dir))
     all_journals.extend(load_doaj_data(args.input_dir))
     all_journals.extend(load_nlm_data(args.input_dir))
     all_journals.extend(load_lsiou_data(args.input_dir))

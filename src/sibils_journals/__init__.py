@@ -20,11 +20,11 @@ from .exporters import export_csv, export_elasticsearch, export_summary_json
 from .loaders import (
     load_crossref_data,
     load_doaj_data,
-    load_europepmc_data,
     load_issn_l_table,
     load_openalex_data,
-    parse_europepmc_issn,
+    load_pmc_data,
     process_openalex_record,
+    process_pmc_record,
 )
 
 # Export merger
@@ -115,8 +115,8 @@ __all__ = [
     "load_crossref_data",
     "load_openalex_data",
     "process_openalex_record",
-    "load_europepmc_data",
-    "parse_europepmc_issn",
+    "load_pmc_data",
+    "process_pmc_record",
     "load_doaj_data",
     # Metrics
     "QualityMetrics",

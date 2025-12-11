@@ -13,7 +13,7 @@ DEFAULT_SIBILS_VERSION = "5.0.5.8"
 
 # Data source URLs
 CROSSREF_TITLE_LIST_URL = "https://ftp.crossref.org/titlelist/titleFile.csv"
-EUROPEPMC_BULK_URL = "https://europepmc.org/ftp/pmclitemetadata/PMCLiteMetadata.tgz"
+PMC_JLIST_URL = "https://cdn.ncbi.nlm.nih.gov/pmc/home/jlist.csv"  # PMC journal list (~1.1 MB)
 DOAJ_CSV_URL = "https://doaj.org/csv"  # Redirects to S3, weekly updates
 NLM_CATALOG_URL = "https://ftp.ncbi.nih.gov/pubmed/J_Entrez.txt"
 NLM_EUTILS_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"

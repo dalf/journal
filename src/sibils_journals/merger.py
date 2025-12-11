@@ -4,7 +4,7 @@ Merge Algorithm Overview
 ========================
 
 This module implements a 4-phase deduplication and merge strategy to unify
-journal records from multiple data sources (Crossref, OpenAlex, DOAJ, EuropePMC, NLM).
+journal records from multiple data sources (Crossref, OpenAlex, DOAJ, PMC, NLM).
 
 Phases:
     1. Key Resolution: Build ISSN → canonical key mapping (see KeyResolver class)
@@ -290,6 +290,10 @@ def create_unified_record(journal: JournalDict, source: DataSource) -> JournalDi
         medline_abbreviation=journal.get("medline_abbreviation"),
         is_medline_indexed=journal.get("is_medline_indexed"),
         is_pmc_indexed=journal.get("is_pmc_indexed"),
+        # PMC agreement details
+        pmc_agreement_status=journal.get("pmc_agreement_status"),
+        pmc_last_deposit_year=journal.get("pmc_last_deposit_year"),
+        pmc_embargo_months=journal.get("pmc_embargo_months"),
         alternative_titles=list(journal.get("alternative_titles") or []),
         other_organisations=list(journal.get("other_organisations") or []),
         source_type=journal.get("source_type"),
@@ -363,6 +367,7 @@ def merge_journal_records(
         "country",
         "source_type",
         "medline_abbreviation",
+        "pmc_agreement_status",
         "subject_domain",
         "subject_field",
         "subject_subfield",
@@ -395,7 +400,7 @@ def merge_journal_records(
             existing[field] = new_value
 
     # Numeric fields: update if empty or higher priority
-    for field in ["apc_amount", "works_count", "cited_by_count", "h_index"]:
+    for field in ["apc_amount", "works_count", "cited_by_count", "h_index", "pmc_last_deposit_year", "pmc_embargo_months"]:
         new_value = new_journal.get(field)
         if new_value is not None:
             existing_value = existing.get(field)

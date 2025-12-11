@@ -57,7 +57,7 @@ class DataSource(str, Enum):
     OPENALEX = "openalex"
     CROSSREF = "crossref"
     DOAJ = "doaj"
-    EUROPEPMC = "europepmc"
+    PMC = "pmc"  # PubMed Central journal list (journals with deposit agreements)
     NLM = "nlm"
     LSIOU = "lsiou"  # NLM List of Serials Indexed for Online Users (MEDLINE journals)
     SIBILS = "sibils"  # SIBiLS journal references (title-only, no ISSN)
@@ -71,7 +71,7 @@ DEFAULT_SOURCE_PRIORITY = {
     DataSource.LSIOU: 7,  # NLM MEDLINE serials (most authoritative for biomedical journals)
     DataSource.OPENALEX: 5,  # Broad coverage, metrics, subjects
     DataSource.CROSSREF: 4,  # Publisher-reported data, fill gaps
-    DataSource.EUROPEPMC: 1,  # Sparse data (mainly is_pmc_indexed flag)
+    DataSource.PMC: 3,  # PMC journal list (is_pmc_indexed flag + publisher)
     DataSource.SIBILS: 0,  # Title-only data (added via --sibils-filter)
 }
 
@@ -178,7 +178,12 @@ class JournalDict(TypedDict, total=False):
     # Basic metadata
     medline_abbreviation: str | None  # Official MEDLINE title abbreviation (from NLM)
     is_medline_indexed: bool | None  # Currently indexed in MEDLINE (from NLM Catalog API)
-    is_pmc_indexed: bool | None  # Has full-text articles in PubMed Central (from EuropePMC)
+    is_pmc_indexed: bool | None  # Has deposit agreement with PubMed Central (from PMC jlist)
+
+    # PMC agreement details (from jlist.csv)
+    pmc_agreement_status: str | None  # "Active", "No longer participating", "No longer published", "Predecessor title"
+    pmc_last_deposit_year: int | None  # Most recent deposit year (from "Most Recent" column)
+    pmc_embargo_months: int | None  # Embargo period in months (0 = immediate release)
     alternative_titles: list[str]  # abbreviations, translations, former names
     other_organisations: list[str]  # affiliated orgs beyond primary publisher
     source_type: str | None  # journal, book series, conference, repository, ebook platform

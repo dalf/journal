@@ -5,7 +5,7 @@ Downloads journal/ISSN data from multiple sources:
 1. ISSN Official (ISSN-L table)
 2. Crossref (title list CSV)
 3. OpenAlex (sources data)
-4. EuropePMC (bulk metadata dump)
+4. PMC (PubMed Central journal list)
 5. DOAJ (Directory of Open Access Journals)
 6. NLM Catalog (Entrez journal list with abbreviations)
 
@@ -29,13 +29,13 @@ from .config import (
     CROSSREF_TITLE_LIST_URL,
     DEFAULT_RAW_DIR,
     DOAJ_CSV_URL,
-    EUROPEPMC_BULK_URL,
     LSIOU_FILENAME,
     LSIOU_FTP_URL,
     NLM_CATALOG_URL,
     NLM_EUTILS_BASE,
     OPENALEX_S3_BUCKET,
     OPENALEX_S3_PREFIX,
+    PMC_JLIST_URL,
 )
 
 logger = logging.getLogger(__name__)
@@ -73,7 +73,7 @@ def setup_output_dir(output_dir: Path) -> dict[str, Path]:
         "issn": output_dir / "issn",
         "crossref": output_dir / "crossref",
         "openalex": output_dir / "openalex",
-        "europepmc": output_dir / "europepmc",
+        "pmc": output_dir / "pmc",
         "doaj": output_dir / "doaj",
         "nlm": output_dir / "nlm",
         "lsiou": output_dir / "lsiou",
@@ -321,48 +321,46 @@ def download_openalex(dirs: dict[str, Path], force_yes: bool = False) -> None:
         logger.debug(traceback.format_exc())
 
 
-def download_europepmc(
+def download_pmc(
     dirs: dict[str, Path],
     force_yes: bool = False,
 ) -> None:
     """
-    Download EuropePMC bulk metadata dump.
+    Download PMC (PubMed Central) journal list CSV.
 
-    Downloads the weekly PMCLiteMetadata.tgz file containing XML metadata
-    for all full-text articles in Europe PMC. Journal information is
-    extracted during the unification step.
+    Downloads the official list of journals with PMC deposit agreements
+    from NCBI. This is a lightweight file (~1.1 MB) that provides
+    authoritative PMC indexing status plus publisher and embargo info.
 
-    See: https://europepmc.org/downloads
+    See: https://pmc.ncbi.nlm.nih.gov/journals/
     """
     logger.info("=" * 60)
-    logger.info("EuropePMC Bulk Metadata")
+    logger.info("PMC Journal List")
     logger.info("=" * 60)
 
-    output_path = dirs["europepmc"] / "PMCLiteMetadata.tgz"
-    download_url = EUROPEPMC_BULK_URL
+    output_path = dirs["pmc"] / "jlist.csv"
 
     if output_path.exists():
-        file_size = output_path.stat().st_size / (1024 * 1024)  # MB
-        logger.info(f"  Found existing file: {output_path} ({file_size:.1f} MB)")
+        file_size = output_path.stat().st_size / 1024  # KB
+        logger.info(f"  Found existing file: {output_path} ({file_size:.1f} KB)")
         if not prompt_user("  Re-download?", default=False, force_yes=force_yes):
             return
 
-    logger.info(f"  Downloading from: {download_url}")
-    logger.info("  Note: This is a large file (~1.5 GB), download may take a while...")
+    logger.info(f"  Downloading from: {PMC_JLIST_URL}")
 
     session = create_session_with_retries()
     success = download_file(
-        download_url,
+        PMC_JLIST_URL,
         output_path,
-        "EuropePMC Metadata",
+        "PMC Journal List",
         session,
     )
 
     if success:
-        file_size = output_path.stat().st_size / (1024 * 1024)
-        logger.info(f"  Downloaded {file_size:.1f} MB to: {output_path}")
+        file_size = output_path.stat().st_size / 1024
+        logger.info(f"  Downloaded {file_size:.1f} KB to: {output_path}")
     else:
-        logger.error("  Download failed. You can retry to download again.")
+        logger.error("  Download failed.")
 
 
 def download_doaj(dirs: dict[str, Path], force_yes: bool = False) -> None:
@@ -686,7 +684,7 @@ Examples:
         "--sources",
         type=str,
         default="all",
-        help="Sources to download: all, issn, crossref, openalex, europepmc, doaj, nlm, lsiou (comma-separated)",
+        help="Sources to download: all, issn, crossref, openalex, pmc, doaj, nlm, lsiou (comma-separated)",
     )
     parser.add_argument(
         "-y",
@@ -708,7 +706,7 @@ Examples:
         logging.getLogger().setLevel(logging.DEBUG)
 
     # Parse sources
-    valid_sources = {"issn", "crossref", "openalex", "europepmc", "doaj", "nlm", "lsiou"}
+    valid_sources = {"issn", "crossref", "openalex", "pmc", "doaj", "nlm", "lsiou"}
     if args.sources.lower() == "all":
         sources = valid_sources.copy()
     else:
@@ -737,8 +735,8 @@ Examples:
     if "openalex" in sources:
         download_openalex(dirs, force_yes=args.yes)
 
-    if "europepmc" in sources:
-        download_europepmc(dirs, force_yes=args.yes)
+    if "pmc" in sources:
+        download_pmc(dirs, force_yes=args.yes)
 
     if "doaj" in sources:
         download_doaj(dirs, force_yes=args.yes)
