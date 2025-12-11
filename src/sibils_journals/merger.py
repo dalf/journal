@@ -277,6 +277,7 @@ def create_unified_record(journal: JournalDict, source: DataSource) -> JournalDi
         issn_electronic=journal.get("issn_electronic"),
         nlm_id=journal.get("nlm_id"),
         openalex_id=journal.get("openalex_id"),
+        wikidata_id=journal.get("wikidata_id"),
         title=journal.get("title"),
         publisher=journal.get("publisher"),
         country=journal.get("country"),
@@ -444,6 +445,11 @@ def merge_journal_records(
         existing["nlm_id"] = nlm_id
     if openalex_id and not existing.get("openalex_id"):
         existing["openalex_id"] = openalex_id
+
+    # Wikidata ID (from OpenAlex)
+    wikidata_id = new_journal.get("wikidata_id")
+    if wikidata_id and not existing.get("wikidata_id"):
+        existing["wikidata_id"] = wikidata_id
 
     # Collect all ISSNs into all_issns for comprehensive lookup
     all_issns_list = existing.get("all_issns", [])

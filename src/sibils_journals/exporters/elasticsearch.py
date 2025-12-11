@@ -106,6 +106,7 @@ INDEX_MAPPING = {
             "issn_electronic": {"type": "keyword"},
             "nlm_id": {"type": "keyword"},  # NLM Catalog unique identifier
             "openalex_id": {"type": "keyword"},  # OpenAlex source identifier (e.g., S4306530189)
+            "wikidata_id": {"type": "keyword"},  # Wikidata QID (e.g., Q180445)
             "is_medline_indexed": {"type": "boolean"},  # Currently indexed in MEDLINE
             "is_pmc_indexed": {"type": "boolean"},  # Has formal deposit agreement with PMC
             # PMC agreement details

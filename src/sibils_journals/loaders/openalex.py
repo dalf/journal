@@ -72,6 +72,15 @@ def process_openalex_record(source: dict, include_no_issn: bool = True) -> Optio
     if not pissn:
         pissn = issn_l
 
+    # Extract Wikidata ID from ids object (e.g., "https://www.wikidata.org/entity/Q180445" -> "Q180445")
+    wikidata_id = None
+    ids_obj = source.get("ids") or {}
+    wikidata_url = ids_obj.get("wikidata")
+    if wikidata_url and isinstance(wikidata_url, str):
+        # Extract QID from URL
+        if wikidata_url.startswith("https://www.wikidata.org/entity/"):
+            wikidata_id = wikidata_url.replace("https://www.wikidata.org/entity/", "")
+
     journal = {
         "title": normalize_title(source.get("display_name")),
         "publisher": normalize_publisher(source.get("host_organization_name")),
@@ -79,6 +88,7 @@ def process_openalex_record(source: dict, include_no_issn: bool = True) -> Optio
         "issn_electronic": eissn,
         "issn_l": issn_l,
         "openalex_id": openalex_id,
+        "wikidata_id": wikidata_id,
         "country": normalize_country(source.get("country_code")),
         "source": DataSource.OPENALEX,
     }

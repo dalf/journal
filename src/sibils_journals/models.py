@@ -172,6 +172,7 @@ class JournalDict(TypedDict, total=False):
     issn_l: str | None  # Linking ISSN: groups all editions together
     nlm_id: str | None  # NLM unique identifier (from NLM Catalog)
     openalex_id: str | None  # OpenAlex source identifier (e.g., S4306530189)
+    wikidata_id: str | None  # Wikidata QID (e.g., Q180445 for Nature)
     publisher: str | None
     country: str | None  # ISO 3166-1 alpha-2 (e.g., US, GB, DE)
 
