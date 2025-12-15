@@ -1,0 +1,30 @@
+[project]
+name = "sibils-journals"
+version = "0.1.0"
+description = "Journal repository for SIBiLS"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.41.2",
+    "defusedxml>=0.7.1",
+    "elasticsearch>=9.2.0",
+    "license-expression>=30.4.4",
+    "lxml>=6.0.2",
+    "pandas>=2.3.3",
+    "pycountry>=24.6.1",
+    "requests>=2.32.5",
+    "tqdm>=4.67.1",
+]
+
+[project.scripts]
+sibils-journals = "sibils_journals.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sibils_journals"]
+
+[tool.ruff]
+line-length = 160
