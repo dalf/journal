@@ -18,6 +18,23 @@ from .loaders import (
     load_wikidata_data,
 )
 from .merger import unify_journals
+from .models import DataSource
+
+# Mapping from data source enum to loader function
+SOURCE_LOADERS = {
+    DataSource.CROSSREF: load_crossref_data,
+    DataSource.OPENALEX: load_openalex_data,
+    DataSource.PMC: load_pmc_data,
+    DataSource.DOAJ: load_doaj_data,
+    DataSource.NLM: load_nlm_data,
+    DataSource.LSIOU: load_lsiou_data,
+    DataSource.JSTAGE: load_jstage_data,
+    DataSource.WIKIDATA: load_wikidata_data,
+}
+
+# All available source names (for help text and validation)
+AVAILABLE_SOURCES = [s.value for s in SOURCE_LOADERS.keys()]
+
 from .metrics import get_metrics, reset_metrics
 from .config import DEFAULT_OUTPUT_DIR, DEFAULT_RAW_DIR
 from .sibils_filter import apply_sibils_filter
@@ -74,6 +91,13 @@ Examples:
         "--verbose",
         action="store_true",
         help="Enable verbose/debug logging",
+    )
+    parser.add_argument(
+        "--sources",
+        nargs="+",
+        choices=AVAILABLE_SOURCES,
+        metavar="SOURCE",
+        help=f"Data sources to include (default: all). Available: {', '.join(AVAILABLE_SOURCES)}",
     )
 
     # SIBiLS filter options
@@ -146,15 +170,17 @@ Examples:
 
     all_journals = []
 
-    # Load each source
-    all_journals.extend(load_crossref_data(args.input_dir))
-    all_journals.extend(load_openalex_data(args.input_dir))
-    all_journals.extend(load_pmc_data(args.input_dir))
-    all_journals.extend(load_doaj_data(args.input_dir))
-    all_journals.extend(load_nlm_data(args.input_dir))
-    all_journals.extend(load_lsiou_data(args.input_dir))
-    all_journals.extend(load_jstage_data(args.input_dir))
-    all_journals.extend(load_wikidata_data(args.input_dir))  # Gap-filling: no NLM/OpenAlex IDs
+    # Determine which sources to load
+    if args.sources:
+        sources_to_load = [DataSource(s) for s in args.sources]
+        logger.info(f"Loading selected sources: {', '.join(args.sources)}")
+    else:
+        sources_to_load = list(SOURCE_LOADERS.keys())
+
+    # Load each selected source
+    for source in sources_to_load:
+        loader = SOURCE_LOADERS[source]
+        all_journals.extend(loader(args.input_dir))
 
     logger.info(f"Total records loaded: {len(all_journals):,}")
 

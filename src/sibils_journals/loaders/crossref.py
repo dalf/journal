@@ -91,20 +91,10 @@ def process_crossref_item(item: dict) -> Optional[JournalDict]:
     if publisher:
         journal["publisher"] = normalize_publisher(publisher)
 
-    # Subjects (often empty in Crossref)
-    subjects = item.get("subjects", [])
-    if subjects:
-        # Subjects come as list of {name: ..., ASJC: ...} objects
-        subject_names = []
-        for subj in subjects:
-            if isinstance(subj, dict):
-                name = subj.get("name")
-                if name:
-                    subject_names.append(name)
-            elif isinstance(subj, str):
-                subject_names.append(subj)
-        if subject_names:
-            journal["subjects"] = subject_names
+    # Plagiarism screening (from similarity-checking flag)
+    flags = item.get("flags", {})
+    if flags.get("deposits-similarity-checking-current"):
+        journal["plagiarism_screening"] = True
 
     return journal
 
